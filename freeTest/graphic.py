@@ -1,9 +1,8 @@
 from tkinter import *
 from tkinter import messagebox as mb
-
-
 import time
 
+#evaluate the list (begins the technical part)
 def evaluate(list):
     solution = list
     if not validFirst(list):
@@ -41,13 +40,16 @@ def zeroes(list):
 def valid(list, tupl, change):
     (x,y) = tupl
 
+    #row
     if change in (list[y][:(x)]+list[y][(x+1):]):
         return False
 
+    #column
     lina = [i[x] for i in list]
     if change in (lina[:y]+lina[(y+1):]):
         return False
 
+    #box
     bx = x // 3
     by = y // 3
     pos = x%3+3*(y%3)
@@ -57,9 +59,11 @@ def valid(list, tupl, change):
             line.append(list[s+3*by][t+3*bx])
     if change in (line[:pos]+line[(pos+1):]):
         return False
+
+    #if everthing checks out, then the new system is valid
     return True
 
-#check if combination is valid:
+#much more exhaustive validty check, only performed to check if the SUDKO has been entered correctly
 def validFirst(list):
     for x in range(9):
         if not lineValid(list[x]): return False
@@ -73,7 +77,7 @@ def validFirst(list):
             if not lineValid(line): return False
     return True
 
-
+#helper function for validFirst()
 def lineValid(line):
     l = [i for i in line if i != 0]
     return len(l) == len(set(l))
@@ -106,14 +110,14 @@ def clicked():
     solution = evaluate(list)
     display(solution)
 
+#displays final result
 def display(solution):
     for x in range(9):
         for y in range(9):
             l[x][y].delete(0, END)
             l[x][y].insert(0, solution[x][y])
 
-#setup
-
+#setup and main process
 root = Tk()
 l = []
 for x in range(9):
@@ -126,7 +130,4 @@ for x in range(9):
 
 b = Button(root, text="Solve", command=clicked)
 b.grid(row=10, columnspan =9)
-
-
-
 mainloop()
