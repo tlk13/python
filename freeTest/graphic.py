@@ -5,7 +5,8 @@ from tkinter import messagebox as mb
 import time
 
 def evaluate(list):
-    if not valid(list):
+    solution = list
+    if not validFirst(list):
         fault()
     else:
         z = zeroes(list)
@@ -14,16 +15,16 @@ def evaluate(list):
 
 #backtrack algorithm
 def backtrack(list, zers, zerslen, n):
-    if not valid(list): return (list, 0)
     if n == zerslen:  return (list, 2)
     (x,y) = zers[n]
     nlist = list
 
     for z in range(1,10):
         nlist[y][x] = z
-        (nnlist, sol) = backtrack(nlist, zers, zerslen, n+1)
-        if(sol) == 2:
-            return (nnlist,2)
+        if valid (nlist, (x,y), z):
+            (nnlist, sol) = backtrack(nlist, zers, zerslen, n+1)
+            if(sol) == 2:
+                return (nnlist,2)
         nlist[y][x] = 0
     return (list, 0)
 
@@ -36,9 +37,30 @@ def zeroes(list):
                 zers.append((x,y))
     return zers
 
+#check indiviudal cell
+def valid(list, tupl, change):
+    (x,y) = tupl
+
+    if change in (list[y][:(x)]+list[y][(x+1):]):
+        return False
+
+    lina = [i[x] for i in list]
+    if change in (lina[:y]+lina[(y+1):]):
+        return False
+
+    bx = x // 3
+    by = y // 3
+    pos = x%3+3*(y%3)
+    line = []
+    for s in range(3):
+        for t in range(3):
+            line.append(list[s+3*by][t+3*bx])
+    if change in (line[:pos]+line[(pos+1):]):
+        return False
+    return True
 
 #check if combination is valid:
-def valid(list):
+def validFirst(list):
     for x in range(9):
         if not lineValid(list[x]): return False
         if not lineValid([i[x] for i in list ]): return False
