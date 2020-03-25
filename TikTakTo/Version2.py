@@ -2,6 +2,7 @@
 ## Actual AI code that deals with the MinMax problem posed by TikTakToo ##
 ##################################################################################
 
+# Identifies the Maximum Value achievable for the computer player (best move)
 def maxValue(field, fieldsMarked, position, playerOne):
     value = -100
     for y in range(3):
@@ -13,6 +14,8 @@ def maxValue(field, fieldsMarked, position, playerOne):
                 if value > 0: return value
     return value
 
+# Identifies the Minimum value
+# worst case scenario for the computer, i.e. best outcome for human player
 def minValue(field, fieldsMarked, position, playerOne):
     value = 100
     for y in range(3):
@@ -24,7 +27,11 @@ def minValue(field, fieldsMarked, position, playerOne):
                 if value < 0: return value
     return value
 
-
+# evaluates the value of state of the game for the computer player
+# if the state is terminal (i.e. someone won or it is a draw), it returns the
+# utilities -10, 0, 10 for each outcome scenario
+# else it goes into the next round of possible states with the minMax approach
+# which try to evaluate it
 def valueOfState(field, fieldsMarked, position, playerOne):
     if fieldsMarked > 4:
         if playerOne:
@@ -36,7 +43,8 @@ def valueOfState(field, fieldsMarked, position, playerOne):
     if playerOne:   return minValue(field, fieldsMarked, position, playerOne)
     return maxValue(field, fieldsMarked, position, playerOne)
 
-
+# cycles through the possible moves for the computer player and returns
+# the play with the highest utility
 def nextMove(field, fieldsMarked, playerOne):
     moves = []; values = []
     for y in range(3):
@@ -49,6 +57,7 @@ def nextMove(field, fieldsMarked, playerOne):
     if 0 in values:  return moves[values.index(0)]
     return moves[values.index(-10)]
 
+# plays the move with the highest utility
 def makeMove(field, fieldsMarked, playerOne):
     y,x = nextMove(field, fieldsMarked, playerOne)
     field[y][x] = " O "
