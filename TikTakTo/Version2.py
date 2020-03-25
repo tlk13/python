@@ -1,210 +1,155 @@
-import copy
+##################################################################################
+## Actual AI code that deals with the MinMax problem posed by TikTakToo ##
+##################################################################################
 
-def printPlayingField(fi):
-    counter = 0
-    for x in fi:
-        for y in fi[counter]:
-            print y,
-        print ""
-        counter +=1
-    print "\n"
+def maxValue(field, fieldsMarked, position, playerOne):
+    value = -100
+    for y in range(3):
+        for x in range(3):
+            if field[y][x]==" . ":
+                field[y][x]= " O "
+                value = max(value, valueOfState(field, fieldsMarked+1, (y,x),  playerOne))
+                field[y][x]= " . "
+                if value > 0: return value
+    return value
 
+def minValue(field, fieldsMarked, position, playerOne):
+    value = 100
+    for y in range(3):
+        for x in range(3):
+            if field[y][x]==" . ":
+                field[y][x]= " X "
+                value = min(value, valueOfState(field, fieldsMarked+1, (y,x),  playerOne))
+                field[y][x]= " . "
+                if value < 0: return value
+    return value
+
+
+def valueOfState(field, fieldsMarked, position, playerOne):
+    if fieldsMarked > 4:
+        if playerOne:
+            if checkWinner(field, fieldsMarked, position, playerOne): return -10
+        else:
+            if checkWinner(field, fieldsMarked, position, playerOne): return 10
+        if fieldsMarked == 9:                                         return 0
+    playerOne = not playerOne
+    if playerOne:   return minValue(field, fieldsMarked, position, playerOne)
+    return maxValue(field, fieldsMarked, position, playerOne)
+
+
+def nextMove(field, fieldsMarked, playerOne):
+    moves = []; values = []
+    for y in range(3):
+        for x in range(3):
+            if field[y][x] == " . ":
+                field[y][x] = " O "
+                moves.append((y,x)); values.append(valueOfState(field, fieldsMarked+1, (y,x), False))
+                field[y][x] = " . "
+    if 10 in values: return moves[values.index(10)]
+    if 0 in values:  return moves[values.index(0)]
+    return moves[values.index(-10)]
+
+def makeMove(field, fieldsMarked, playerOne):
+    y,x = nextMove(field, fieldsMarked, playerOne)
+    field[y][x] = " O "
+    return (y,x)
+
+##################################################################################
+## GUI and game dynamics that allows us to corretly play TikTakToo ##
+##################################################################################
+
+# checks if the user corretly inputs the coordinates, does not work for non-integers
 def getUserInput():
-    xCooVal = False
-    yCooVal = False
+    xCooVal, yCooVal = (False, False)
     while not xCooVal:
-        xCoo = input("Please enter x coordinate!\n")
+        xCoo = int(input("Please enter x coordinate!\n"))
         if xCoo > 0 and xCoo < 4: xCooVal=True
-        else: print "Input was incorrect, please try again!"
+        else: print("Input was incorrect, please try again!")
     while not yCooVal:
-        yCoo = input("Please enter y coordinate!\n")
+        yCoo = int(input("Please enter y coordinate!\n"))
         if yCoo > 0 and yCoo < 4: yCooVal=True
-        else: print "Input was incorrect, please try again!"
-    coordinates = [xCoo, yCoo]
-    return coordinates
+        else: print("Input was incorrect, please try again!")
+    return (yCoo, xCoo)
 
-def registerUserInput():
+# enters the right coordinates from the user in the field and returns these
+# as a tuple
+def registerUserInput(field, playerOne):
     valid = False
-    coordinates = []
     while not valid:
-        coordinates = getUserInput()
-        if field[abs(coordinates[1]-3)][abs(coordinates[0]-1)] == "X" or field[abs(coordinates[1]-3)][abs(coordinates[0]-1)] == "O": print "Please try again, this field has already been marked by you!"
+        y, x = getUserInput()
+        if field[-(y%3)][x-1] != " . ":
+            print("Please try again, this field has already been marked by a player!")
         else: valid = True
-    field[abs(coordinates[1]-3)][abs(coordinates[0]-1)] = "X"
-    print "User Input recognized, here is the updated playing Field:\n"
+    if playerOne: field[-(y%3)][x-1] = " X "
+    else: field[-(y%3)][x-1] = " O "
+    return (-(y%3), x-1)
 
-def checkIfWinner(fie):
-    winnerList = [False]
+# prints the playing field to the console
+def printField(field):
+    for y in range(3):
+        for x in range(3):
+            print(field[y][x], end="")
+        print()
 
-    #check horizontal check Winner
-    for x in fie:
-        if x[0] == "X" and x[1] == "X" and x[2] == "X":
-            winnerList[0]=True; winnerList.append(1)
-            return winnerList
-        if x[0] == "O" and x[1] == "O" and x[2] == "O":
-            winnerList[0]=True; winnerList.append(2)
-            return winnerList
+# checks if a move made by the players is valid or not
+def checkValid(field, position):
+    y, x = position
+    return field[y][x] == " . "
 
-    #check vertical check Winner
-    for i in range(3):
-        if fie[0][i] == "X" and  fie[1][i] == "X" and  fie[2][i] == "X":
-            winnerList[0]=True; winnerList.append(1)
-            return winnerList
-        if fie[0][i] == "O" and  fie[1][i] == "O" and  fie[2][i] == "O":
-            winnerList[0]=True; winnerList.append(2)
-            return winnerList
-
-    #check diagonal check Winner
-    if (fie[0][0] == "X" and fie[1][1] == "X" and fie[2][2] == "X") or (fie[0][2] == "X" and fie[1][1] == "X" and fie[2][0] == "X"):
-        winnerList[0]=True; winnerList.append(1)
-        return winnerList
-    if (fie[0][0] == "O" and fie[1][1] == "O" and fie[2][2] == "O") or (fie[0][2] == "O" and fie[1][1] == "O" and fie[2][0] == "O"):
-        winnerList[0]=True; winnerList.append(2)
-        return winnerList
-    else: return winnerList
-
-def checkIfTerminal(fie):
-    if checkIfWinner(fie)[0]:
-        return True
-    elif checkIfFull(fie):
-        return True
-    else:
+# simply checks if the latest move (position) resulted in a win for the
+# player who is currently playing (playerOne is a boolean)
+# works faster as in case the amount of fieldsMarked is low, then there cannot be a winner
+def checkWinner(field, fieldsMarked, position, playerOne):
+    if fieldsMarked < 5:
         return False
+    playerSign = ""
+    y,x = position
+    if playerOne: playerSign = " X "
+    else: playerSign = " O "
+    if field[0][x] == field[1][x] == field[2][x] == playerSign: return True
+    if field[y][0] == field[y][1] == field[y][2] == playerSign: return True
+    if (y+y)%2==0:
+        if field[0][0]==field[1][1]==field[2][2]==playerSign or \
+            field[2][0]==field[1][1]==field[0][2]==playerSign:
+            return True
+    return False
 
-def checkIfFull(fie):
-    counter = 0
-    for x in fie:
-        for i in range(3):
-            if not x[i] == ".": counter+=1
-    if counter == 9: return True
-    else: return False
+# initializes / resets the playing field and gives helpful info
+def introduce():
+    field = [[" . " for x in range(3)] for x in range(3)]
+    print("\n\n"+80*"-"+"\nWelcome to the game of TikTakToo, you have the first move.\n" +
+    "Beware, the computer know of any weaknesses in your strategy.")
+    printField(field)
+    return (field, 0, True)
 
-def numberOfOptions(fie):
-    counter = 0
-    for x in fie:
-        for i in range(3):
-            if x[i]==".": counter+=1
-    return counter
+# creates the important variables
+field = [[]]; fieldsMarked = 0; playerOne = True
+field, fieldsMarked, playerOne = introduce()
 
-def checkUtility(fie):
-    if checkIfFull(fie) == True and checkIfWinner(fie)[0] == False:
-        return 0
-    if checkIfWinner(fie)[0]:
-        if checkIfWinner(fie)[1] == 1:
-            return (-10)
-        else:
-            return 10
-    pass
+while True:
+    if fieldsMarked == 9:
+        print("The Game has ended, do you want to play another round? \n Type 'y' for yes and 'n' for no.")
+        s = input()
+        if s == "y":
+            introduce(); continue
+        elif s == "n":   print("Thank you for playing! Come back anytime!"); break
+        else:            print("You did not answer correctly, please look out again!"); continue
 
-def introduction():
-    print "Welcome to this game of TikTakTo"
-    print "You will proceed by entering the coordinates where you would like to make your X, by typing the x coordinate and then the y coordinate"
+    if playerOne: print("Your turn: ");move = registerUserInput(field, playerOne)
+    else:         move = makeMove(field, fieldsMarked, playerOne); print("The computer played: ")
 
-    print "Here is you playing field: "
-
-    printPlayingField(field)
-
-def valueOfState(fie, ma):
-    if checkIfTerminal(fie):
-        return checkUtility(fie)
-    elif ma:
-        return maxValue(fie)
-    else:
-        return minValue(fie)
-
-def maxValue(fie):
-    v = -1000
-    for x in range(3):
-        for y in range(3):
-            if fie[x][y] == ".":
-                fi = copy.deepcopy(fie)
-                fi[x][y]="O"
-                v = max(v, valueOfState(fi, False))
-    return v
-
-def minValue(fie):
-    v = 1000
-    for x in range(3):
-        for y in range(3):
-            if fie[x][y] == ".":
-                fi = copy.deepcopy(fie)
-                fi[x][y]="X"
-                v = min(v, valueOfState(fi, True))
-    return v
+    fieldsMarked += 1
+    printField(field)
+    if checkWinner(field, fieldsMarked, move, playerOne):
+         print("Player " + str((not playerOne) + 1) + " has won!"); fieldsMarked = 9; continue
 
 
-def playNextMove():
-    print "Checking next move"
-    moveFound = False
-    xCC, yCC = 0,0
-    for x in range(3):
-        for y in range(3):
-            if field[x][y] == ".":
-                fi = copy.deepcopy(field)
-                fi[x][y]="O"
-                if valueOfState(fi, False) > 0:
-                    moveFound = True
-                    xCC, yCC = x,y
-    if not moveFound:
-        print "Checking Neutral Options"
-        for x in range(3):
-            for y in range(3):
-                if field[x][y] == ".":
-                    fi = copy.deepcopy(field)
-                    fi[x][y]="O"
-                    if valueOfState(fi, False) == 0:
-                        moveFound = True
-                        xCC, yCC = x,y
-    if not moveFound:
-        print "checkign negative optioms"
-        for x in range(3):
-            for y in range(3):
-                if field[x][y] == ".":
-                    fi = copy.deepcopy(field)
-                    fi[x][y]="O"
-                    if valueOfState(fi, False) < 0:
-                        moveFound = True
-                        xCC, yCC = x,y
-    field[xCC][yCC] = "O"
+    playerOne = not playerOne
 
-#setUp
-field = [["." for y in range(3)] for x in range(3)]
-gameWon = False
-wantToPlay = True
-introduction()
 
-#mainLoop
-while wantToPlay:
-    while not gameWon:
-        registerUserInput()
-        printPlayingField(field)
-        gameWon = checkIfWinner(field)[0]
-        if gameWon:
-            print "Player ", checkIfWinner(field)[1], " won the game, Congratulations!!"; break
-        if checkIfFull(field):
-            print "The game terminated, the field is too full :("; break
-        playNextMove()
-        printPlayingField(field)
-        gameWon = checkIfWinner(field)[0]
-        if gameWon:
-            print "Player ", checkIfWinner(field)[1], " won the game, You were beaten by a Computer!!"; break
-        if checkIfFull(field):
-            print "The game terminated, the field is too full :("; break
-    inputValid = False
-    while not inputValid:
-        s = raw_input("Do you want to continue? - answer with 'y' or 'n'\n")
-        if s == "n":
-            print "The game terminated"
-            wantToPlay = False
-            inputValid = True
-            break
-        elif s == "y":
-            print "Another round! \n"
-            inputValid = True
-            gameWon = False
-            field = [["." for y in range(3)] for x in range(3)]
-            printPlayingField(field)
-            break
-        else:
-            print "This is not valid input, please repeat"
-            inputValid = False
+
+
+
+
+
+#test

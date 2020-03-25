@@ -79,13 +79,6 @@ def checkIfFull(fie):
     if counter == 9: return True
     else: return False
 
-def numberOfOptions(fie):
-    counter = 0
-    for x in fie:
-        for i in range(3):
-            if x[i]==".": counter+=1
-    return counter
-
 def checkUtility(fie):
     if checkIfFull(fie) == True and checkIfWinner(fie)[0] == False:
         return 0
