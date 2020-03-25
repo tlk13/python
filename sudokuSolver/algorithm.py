@@ -1,5 +1,6 @@
 import time
 
+
 def evaluate(list):
 
     z = zeroes(list)
