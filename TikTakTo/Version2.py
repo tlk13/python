@@ -123,6 +123,11 @@ def checkWinner(field, fieldsMarked, position, playerOne):
             return True
     return False
 
+
+##################################################################################
+## Here the game is commenced plus the main loop is started ##
+##################################################################################
+
 # initializes / resets the playing field and gives helpful info
 def introduce():
     field = [[" . " for x in range(3)] for x in range(3)]
